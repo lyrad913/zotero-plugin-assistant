@@ -1,24 +1,24 @@
 {
-  "name": "zotero-plugin-template",
+  "name": "zotero-plugin-assistant",
   "type": "module",
-  "version": "3.1.0",
-  "description": "Zotero Plugin Template",
+  "version": "0.0.1",
+  "description": "Chat with Paper using Local/Vendor LLM",
   "config": {
-    "addonName": "Zotero Plugin Template",
-    "addonID": "addontemplate@euclpts.com",
-    "addonRef": "addontemplate",
-    "addonInstance": "AddonTemplate",
-    "prefsPrefix": "extensions.zotero.addontemplate"
+    "addonName": "Zotero Plugin Assistant",
+    "addonID": "lyradortiz913@gmail.com",
+    "addonRef": "addonassistant",
+    "addonInstance": "AddonAssistant",
+    "prefsPrefix": "extensions.zotero.${addonRef}"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/windingwind/zotero-plugin-template.git"
+    "url": "git+https://github.com/lyrad913/zotero-plugin-assistant.git"
   },
-  "author": "windingwind",
+  "author": "lyrad913",
   "bugs": {
-    "url": "https://github.com/windingwind/zotero-plugin-template/issues"
+    "url": "https://github.com/lyrad913/zotero-plugin-assistant/issues"
   },
-  "homepage": "https://github.com/windingwind/zotero-plugin-template#readme",
+  "homepage": "https://github.com/lyrad913/zotero-plugin-assistant#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "start": "zotero-plugin serve",

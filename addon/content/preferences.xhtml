@@ -6,24 +6,64 @@
 >
   <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
   <checkbox
-    id="zotero-prefpane-__addonRef__-enable"
-    preference="enable"
-    data-l10n-id="pref-enable"
+    id="zotero-prefpane-__addonRef__-embedding"
+    preference="extensions.zotero.__addonRef__.enableEmbedding"
+    data-l10n-id="pref-enable-embedding"
+    onchange="Zotero.__addonInstance__.toggleEmbeddingModelInput(this.checked);"
   />
-  <hbox>
+  <checkbox
+    id="zotero-prefpane-__addonRef__-api"
+    preference="extensions.zotero.__addonRef__.enableMultimodal"
+    data-l10n-id="pref-enable-multimodal"
+  />
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
     <html:label
-      for="zotero-prefpane-__addonRef__-input"
-      data-l10n-id="pref-input"
+      for="zotero-prefpane-__addonRef__-input-api"
+      data-l10n-id="pref-input-api"
     ></html:label>
     <html:input
       type="text"
-      id="zotero-prefpane-__addonRef__-input"
-      preference="input"
+      id="zotero-prefpane-__addonRef__-input-api"
+      preference="extensions.zotero.__addonRef__.apiKey"
     ></html:input>
   </hbox>
-  <hbox class="virtualized-table-container" flex="1" height="300px">
-    <html:div id="__addonRef__-table-container" />
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
+    <html:label
+      for="zotero-prefpane-__addonRef__-base-url"
+      data-l10n-id="pref-input-base-url"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-base-url"
+      preference="extensions.zotero.__addonRef__.baseUrl"
+    ></html:input>
   </hbox>
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
+    <html:label
+      for="zotero-prefpane-__addonRef__-input-model-name"
+      data-l10n-id="pref-input-model-name"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-input-model-name"
+      preference="extensions.zotero.__addonRef__.modelName"
+    ></html:input>
+  </hbox>
+  <hbox align="center" style = "display: none; align-items: center; margin-bottom: 10px", id= "embedding-model-input-container">
+    <html:label
+      for="zotero-prefpane-__addonRef__-input-embedding-model"
+      data-l10n-id="pref-input-embedding-model"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-input-embedding-model"
+      preference="extensions.zotero.__addonRef__.embeddingModel"
+    ></html:input>
+  </hbox>
+
+  <!-- <hbox class="virtualized-table-container" flex="1" height="300px"> -->
+  <!--   <html:div id="__addonRef__-table-container" /> -->
+  <!-- </hbox> -->
 </groupbox>
 <vbox>
   <html:label

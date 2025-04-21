@@ -30,7 +30,7 @@ export async function registerPrefsScripts(_window: Window) {
         },
         {
           title: "Apple",
-          detail: "I mean the fruit APPLE",
+          detail: "I mean the fruit",
         },
       ],
     };

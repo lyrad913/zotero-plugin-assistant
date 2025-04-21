@@ -20,6 +20,7 @@ class Addon {
     };
     dialog?: DialogHelper;
   };
+
   // Lifecycle hooks
   public hooks: typeof hooks;
   // APIs
