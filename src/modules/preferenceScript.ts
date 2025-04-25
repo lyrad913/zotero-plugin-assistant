@@ -24,14 +24,6 @@ export async function registerPrefsScripts(_window: Window) {
           title: "Orange",
           detail: "It's juicy",
         },
-        {
-          title: "Banana",
-          detail: "It's sweet",
-        },
-        {
-          title: "Apple",
-          detail: "I mean the fruit",
-        },
       ],
     };
   } else {
@@ -118,14 +110,29 @@ function bindPrefEvents() {
       );
     });
 
-  addon.data
-    .prefs!.window.document?.querySelector(
-      `#zotero-prefpane-${config.addonRef}-input`,
-    )
-    ?.addEventListener("change", (e: Event) => {
-      ztoolkit.log(e);
-      addon.data.prefs!.window.alert(
-        `Successfully changed to ${(e.target as HTMLInputElement).value}!`,
-      );
-    });
+  // addon.data
+  //   .prefs!.window.document?.querySelector(
+  //     `#zotero-prefpane-${config.addonRef}-input`,
+  //   )
+  //   ?.addEventListener("change", (e: Event) => {
+  //     ztoolkit.log(e);
+  //     addon.data.prefs!.window.alert(
+  //       `Successfully changed to ${(e.target as HTMLInputElement).value}!`,
+  //     );
+  //   });
+
+  const inputIds = ['api', 'base-url']
+
+  inputIds.forEach(id => {
+    addon.data
+      .prefs!.window.document.querySelector(
+        `#zotero-prefpane-${config.addonRef}-input-${id}`
+      )
+      ?.addEventListener("change", (e) => {
+        ztoolkit.log(e);
+        addon.data.prefs!.window.alert(
+          `Successfully changed ${id} to ${(e.target as HTMLInputElement).value}!`
+        );
+      });
+  });
 }

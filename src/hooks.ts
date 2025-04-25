@@ -8,6 +8,7 @@ import {
 import { getString, initLocale } from "./utils/locale";
 import { registerPrefsScripts } from "./modules/preferenceScript";
 import { createZToolkit } from "./utils/ztoolkit";
+import { registerAssistantPaneSection } from "./modules/readerPane"
 
 async function onStartup() {
   await Promise.all([
@@ -18,21 +19,23 @@ async function onStartup() {
 
   initLocale();
 
-  BasicExampleFactory.registerPrefs();
+  // BasicExampleFactory.registerPrefs();
 
-  BasicExampleFactory.registerNotifier();
+  // BasicExampleFactory.registerNotifier();
 
-  KeyExampleFactory.registerShortcuts();
+  // KeyExampleFactory.registerShortcuts();
 
-  await UIExampleFactory.registerExtraColumn();
+  // await UIExampleFactory.registerExtraColumn();
 
-  await UIExampleFactory.registerExtraColumnWithCustomCell();
+  // await UIExampleFactory.registerExtraColumnWithCustomCell();
 
-  UIExampleFactory.registerItemPaneCustomInfoRow();
+  // UIExampleFactory.registerItemPaneCustomInfoRow();
 
-  UIExampleFactory.registerItemPaneSection();
+  // UIExampleFactory.registerItemPaneSection();
 
-  UIExampleFactory.registerReaderItemPaneSection();
+  // UIExampleFactory.registerReaderItemPaneSection();
+
+  registerAssistantPaneSection();
 
   await Promise.all(
     Zotero.getMainWindows().map((win) => onMainWindowLoad(win)),
