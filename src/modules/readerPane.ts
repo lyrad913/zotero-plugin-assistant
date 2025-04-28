@@ -10,11 +10,11 @@ export function registerAssistantPaneSection() {
         pluginID: config.addonID,
         header: {
             l10nID: getLocaleID("item-section-chatwithpdf-head-text"),
-            icon: "chrome://zotero/skin/20/universal/magic-wand.svg",
+            icon:  `chrome://${addon.data.config.addonRef}/content/icons/chat16.png`,
         },
         sidenav: {
             l10nID: getLocaleID("item-section-chatwithpdf-sidenav-tooltip"),
-            icon: "chrome://zotero/skin/20/universal/magic-wand.svg",
+            icon:  `chrome://${addon.data.config.addonRef}/content/icons/chat32.png`
         },
         bodyXHTML: `
          <div id="chat-with-paper-container" style="display: flex; flex-direction: column; overflow: hidden; height: 100%; width: 100%">

@@ -19,7 +19,7 @@ async function onStartup() {
 
   initLocale();
 
-  // BasicExampleFactory.registerPrefs();
+  BasicExampleFactory.registerPrefs();
 
   // BasicExampleFactory.registerNotifier();
 
@@ -68,7 +68,7 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
     text: `[30%] ${getString("startup-begin")}`,
   });
 
-  // UIExampleFactory.registerStyleSheet(win);
+  UIExampleFactory.registerStyleSheet(win);
 
   // UIExampleFactory.registerRightClickMenuItem();
 

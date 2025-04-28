@@ -1,4 +1,4 @@
-export function addMessage(doc: Document, container: Elemnet | null, text: string, sender: 'user' | 'ai') {
+export function addMessage(doc: Document, container: Element | null, text: string, sender: 'user' | 'ai') {
   if (!container) return;
 
   const messageDiv = doc.createElement('div');
