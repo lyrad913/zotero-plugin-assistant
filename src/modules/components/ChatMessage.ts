@@ -1,13 +1,13 @@
-export function addMessage(container: Elemnet | null, text: string, sender: 'user' | 'ai') {
+export function addMessage(doc: Document, container: Elemnet | null, text: string, sender: 'user' | 'ai') {
   if (!container) return;
 
-  const messageDiv = document.createElement('div');
+  const messageDiv = doc.createElement('div');
   messageDiv.style.maxWidth = '70%';
   messageDiv.style.padding = '8px';
   messageDiv.style.borderRadius = '8px';
   messageDiv.style.marginBottom = '8px';
   messageDiv.style.wordWrap = 'break-word';
-  messageDiv.style.display = 'inline-block';
+  messageDiv.style.display = 'block';
 
   if (sender === 'user') {
     messageDiv.style.backgroundColor = '#FFFFFF';
@@ -19,7 +19,7 @@ export function addMessage(container: Elemnet | null, text: string, sender: 'use
 
   messageDiv.textContent = text;
 
-  const wrapperDiv = document.createElement('div');
+  const wrapperDiv = doc.createElement('div');
   wrapperDiv.style.width = '100%';
   wrapperDiv.style.display = 'flex';
   wrapperDiv.style.flexDirection = sender === 'user' ? 'row-reverse' : 'row';
