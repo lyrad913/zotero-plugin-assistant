@@ -1,16 +1,22 @@
-export function getResponse(question: string): Promise<string> {
-    const responses = [
-        "That's an interesting question. Let me think about it.",
-        "I understand your query. Here's what I think...",
-        "Based on the information available, I would say...",
-        "That's a complex topic. Here's a simplified explanation:",
-        "Great question! Here's my perspective on that:",
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+export async function getResponse(question: string): Promise<string> {
+    const model = new ChatOpenAI({ 
+        configuration: {
+            baseURL: "http://localhost:1234/v1", // LM Studio의 API 엔드포인트
+          },
+        apiKey: "lm-studio",
+        model: "qwen2.5-7b-instruct-1m" ,
+    });
+    
+    
+    const messages = [
+      new SystemMessage("Translate the following from English into Korean"),
+      new HumanMessage("Hello!"),
     ];
     
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            resolve(`${randomResponse}\n\nRegarding "${question}": This is a placeholder response. In a real implementation, this would be replaced with an actual AI-generated answer.`);
-        }, 1000); // 1초 지연을 주어 응답 시간을 시뮬레이션합니다.
-    });
+    const response = await model.invoke(messages);
+    
+    return response.content.toString();
   }
