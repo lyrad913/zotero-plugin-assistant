@@ -14,7 +14,7 @@ export function registerAssistantPaneSection() {
         },
         sidenav: {
             l10nID: getLocaleID("item-section-chatwithpdf-sidenav-tooltip"),
-            icon:  `chrome://${addon.data.config.addonRef}/content/icons/chat32.png`
+            icon:  `chrome://${addon.data.config.addonRef}/content/icons/chat16.png`
         },
         bodyXHTML: `
          <div id="chat-with-paper-container" style="display: flex; flex-direction: column; overflow: hidden; height: 100%; width: 100%">
@@ -40,7 +40,7 @@ export function registerAssistantPaneSection() {
                 const adjustMessagesHeight = () => {
                     const containerHeight = chatContainer.clientHeight;
                     const inputHeight = input.offsetHeight;
-                    chatMessages.style.height = `${containerHeight - inputHeight - 10}px`; 
+                    chatMessages.style.height = `${containerHeight - inputHeight - 10}px`;
                     adjustMessagesHeight();
                 };
 
@@ -58,7 +58,7 @@ export function registerAssistantPaneSection() {
 
                 input.addEventListener('keypress', async (e) => { // 이벤트 리스너 함수 시작
                     if (e.key === 'Enter' && !e.shiftKey) {
-                        
+
                         e.preventDefault();
                         const question = input.value.trim();
                         if (question) {
@@ -71,7 +71,7 @@ export function registerAssistantPaneSection() {
 
                             addMessage(doc, chatMessages, "Thinking...", "ai"); // doc 인자 전달
                             const thinkingMessage = chatMessages.lastElementChild as HTMLElement;
-                            thinkingMessage.scrollTop = thinkingMessage.scrollHeight; 
+                            thinkingMessage.scrollTop = thinkingMessage.scrollHeight;
 
                             try {
                                 const response = await getResponse(question);

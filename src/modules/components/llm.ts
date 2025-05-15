@@ -6,7 +6,7 @@ export async function getResponse(question: string): Promise<string> {
     configuration: {
       apiKey: "lm-studio",
       baseURL: "http://127.0.0.1:1234/v1/",
-      fetch: _globalThis.fetch,
+      fetch: ztoolkit.getGlobal('fetch'),
     },
     model: "qwen2.5-7b-instruct-1m",
     streaming: false,
