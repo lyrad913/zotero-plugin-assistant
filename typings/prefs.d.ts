@@ -7,9 +7,15 @@
 declare namespace _ZoteroTypes {
   interface Prefs {
     PluginPrefsMap: {
-      "enable": boolean;
-      "input": string;
-      "apiKey": string;
+      "enableEmbedding": boolean;
+      "isMultimodal": boolean;
+      "llmApiKey": string;
+      "llmBaseUrl": string;
+      "llmModelName": string;
+      "llmTemperature": number;
+      "embeddingApiKey": string;
+      "embeddingBaseUrl": string;
+      "embeddingModelName": string;
     };
   }
 }

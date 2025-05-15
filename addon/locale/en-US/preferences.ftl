@@ -1,14 +1,20 @@
-pref-title = General 
+pref-llm-title = LLM Configuration
 
-pref-enable-embedding =
-    .label = Embedding
+pref-enable-multimodal =
+    .label = Is Support Multimodal
+pref-input-llmApiKey = API Key
+pref-input-llmBaseURL = Base URL
+pref-input-llmModelName = Model Name
+pref-input-llmTemperature = Temperature of LLM(0~1)
 
-pref-enable-multimodal = 
-    .label = Multimodal
-    
-pref-input-api = API Key
-pref-input-base-url = Base URL
-pref-input-model-name = Model Name
-pref-input-embedding-model = Embedding Model
+pref-embedding-title = Embedding Configuration
+
+pref-enable-Embedding =
+    .label = Enable Embedding
+pref-input-embeddingApiKey = API Key
+pref-input-embeddingBaseUrl = Base URL
+pref-input-embeddingModelName = Model Name
+
+
 
 pref-help = { $name } Build { $version } { $time }

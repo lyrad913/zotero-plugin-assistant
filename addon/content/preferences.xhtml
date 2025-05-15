@@ -4,70 +4,102 @@
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window });"
 >
-  <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
+  <label><html:h2 data-l10n-id="pref-llm-title"></html:h2></label>
   <checkbox
-    id="zotero-prefpane-__addonRef__-embedding"
-    preference="extensions.zotero.__addonRef__.enableEmbedding"
-    data-l10n-id="pref-enable-embedding"
-    
-  />
-  <checkbox
-    id="zotero-prefpane-__addonRef__-api"
-    preference="extensions.zotero.__addonRef__.enableMultimodal"
+    id="zotero-prefpane-__addonRef__-isMultimodal"
+    preference="extensions.zotero.__addonRef__.isMultimodal"
     data-l10n-id="pref-enable-multimodal"
   />
+  <!-- LLM API Key -->
   <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
     <html:label
-      for="zotero-prefpane-__addonRef__-input-api"
-      data-l10n-id="pref-input-api"
+      for="zotero-prefpane-__addonRef__-llmApiKey"
+      data-l10n-id="pref-input-llmApiKey"
     ></html:label>
     <html:input
       type="text"
-      id="zotero-prefpane-__addonRef__-input-api"
-      preference="extensions.zotero.__addonRef__.apiKey"
+      id="zotero-prefpane-__addonRef__-llmApiKey"
+      preference="extensions.zotero.__addonRef__.llmApiKey"
     ></html:input>
   </hbox>
+  <!-- LLM Base URL -->
   <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
     <html:label
-      for="zotero-prefpane-__addonRef__-base-url"
-      data-l10n-id="pref-input-base-url"
+      for="zotero-prefpane-__addonRef__-llmBaseURL"
+      data-l10n-id="pref-input-llmBaseURL"
     ></html:label>
     <html:input
       type="text"
-      id="zotero-prefpane-__addonRef__-base-url"
-      preference="extensions.zotero.__addonRef__.baseUrl"
+      id="zotero-prefpane-__addonRef__-llmBaseURL"
+      preference="extensions.zotero.__addonRef__.llmBaseUrl"
     ></html:input>
   </hbox>
+  <!-- LLM Model Name -->
   <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
     <html:label
-      for="zotero-prefpane-__addonRef__-input-model-name"
-      data-l10n-id="pref-input-model-name"
+      for="zotero-prefpane-__addonRef__-llmModelName"
+      data-l10n-id="pref-input-llmModelName"
     ></html:label>
     <html:input
       type="text"
-      id="zotero-prefpane-__addonRef__-input-model-name"
-      preference="extensions.zotero.__addonRef__.modelName"
+      id="zotero-prefpane-__addonRef__-llmModelName"
+      preference="extensions.zotero.__addonRef__.llmModelName"
     ></html:input>
   </hbox>
+  <!-- LLM Temperature -->
   <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
     <html:label
-      for="zotero-prefpane-__addonRef__-input-embedding-model"
-      data-l10n-id="pref-input-embedding-model"
+      for="zotero-prefpane-__addonRef__-llmTemperature"
+      data-l10n-id="pref-input-llmTemperature"
     ></html:label>
     <html:input
       type="text"
-      id="zotero-prefpane-__addonRef__-input-embedding-model"
-      preference="extensions.zotero.__addonRef__.embeddingModel"
+      id="zotero-prefpane-__addonRef__-llmTemperature"
+      preference="extensions.zotero.__addonRef__.llmTemperature"
     ></html:input>
   </hbox>
 
-  <!-- <hbox class="virtualized-table-container" flex="1" height="300px"> -->
-  <!--   <html:div id="__addonRef__-table-container" /> -->
-  <!-- </hbox> -->
+  <!-- Embedding Configurations -->
+  <label><html:h2 data-l10n-id="pref-embedding-title"></html:h2></label>
+  <checkbox
+    id="zotero-prefpane-__addonRef__-Embedding"
+    preference="extensions.zotero.__addonRef__.Embedding"
+    data-l10n-id="pref-enable-Embedding"
+  />
+  <!-- Embedding API Key -->
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
+    <html:label
+      for="zotero-prefpane-__addonRef__-embeddingApiKey"
+      data-l10n-id="pref-input-embeddingApiKey"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-embeddingApiKey"
+      preference="extensions.zotero.__addonRef__.embeddingModel"
+    ></html:input>
+  </hbox>
+  <!-- Embedding Base URL -->
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
+    <html:label
+      for="zotero-prefpane-__addonRef__-embeddingBaseUrl"
+      data-l10n-id="pref-input-embeddingBaseUrl"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-embeddingBaseUrl"
+      preference="extensions.zotero.__addonRef__.embeddingBaseUrl"
+    ></html:input>
+  </hbox>
+  <!-- Embedding Model Name -->
+  <hbox align="center" style = "display: flex; align-items: center; margin-bottom: 10px">
+    <html:label
+      for="zotero-prefpane-__addonRef__-embeddingModelName"
+      data-l10n-id="pref-input-embeddingModelName"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-embeddingModelName"
+      preference="extensions.zotero.__addonRef__.embeddingModelName"
+    ></html:input>
+  </hbox>
 </groupbox>
-<!-- <vbox> -->
-<!--   <html:label -->
-<!--     data-l10n-id="pref-help" -->
-<!--     data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}' -->
-<!--   ></html:label> -->
-<!-- </vbox> -->
