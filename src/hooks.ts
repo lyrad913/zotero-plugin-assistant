@@ -100,16 +100,6 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
   //   // 실패 시 원인 파악 필요
   // }
 
-  //TEST: getResponse
-  try {
-    const testQuestion = "Hello from Zotero Plugin! How are you?";
-    ztoolkit.log(`[LLM Test] Sending Question: ${testQuestion}`);
-    const response = await getResponse(testQuestion);
-    ztoolkit.log(`[LLM Test] Received response: ${response}`);
-  } catch (error) {
-    ztoolkit.log(`[LLM Test] Error : ${error}`);
-  }
-
   const popupWin = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
     closeOnClick: true,
     closeTime: -1,
