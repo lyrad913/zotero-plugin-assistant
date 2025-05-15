@@ -1,11 +1,11 @@
-_globalThis.fetch = Zotero.getMainWindow().fetch.bind(Zotero.getMainWindow());
-_globalThis.Headers = Headers;
-_globalThis.Response = Response;
-_globalThis.Request = _ZoteroTypes.  Request;
 /**
  * @author Toru Nagashima <https://github.com/mysticatea>
  * See LICENSE file in root directory for full license.
  */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 import * as eventTargetShim from 'event-target-shim';
 
 /**
@@ -105,36 +105,23 @@ function getSignal(controller) {
     }
     return signal;
 }
-
-_globalThis.AbortController = AbortController;
-_globalThis.AbortSignal = AbortSignal;
-
-
-import 'web-streams-polyfill/polyfill';
-_globalThis.ReadableStream = ReadableStream;
-
-import { BasicTool } from "zotero-plugin-toolkit";
-import Addon from "./addon";
-import { config } from "../package.json";
-
-const basicTool = new BasicTool();
-
-// @ts-ignore - Plugin instance is not typed
-if (!basicTool.getGlobal("Zotero")[config.addonInstance]) {
-  _globalThis.addon = new Addon();
-  defineGlobal("ztoolkit", () => {
-    return _globalThis.addon.data.ztoolkit;
-  });
-  // @ts-ignore - Plugin instance is not typed
-  Zotero[config.addonInstance] = addon;
+// Properties should be enumerable.
+Object.defineProperties(AbortController.prototype, {
+    signal: { enumerable: true },
+    abort: { enumerable: true },
+});
+if (typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol") {
+    Object.defineProperty(AbortController.prototype, Symbol.toStringTag, {
+        configurable: true,
+        value: "AbortController",
+    });
 }
 
-function defineGlobal(name: Parameters<BasicTool["getGlobal"]>[0]): void;
-function defineGlobal(name: string, getter: () => any): void;
-function defineGlobal(name: string, getter?: () => any) {
-  Object.defineProperty(_globalThis, name, {
-    get() {
-      return getter ? getter() : basicTool.getGlobal(name);
-    },
-  });
-}
+exports.AbortController = AbortController;
+exports.AbortSignal = AbortSignal;
+exports.default = AbortController;
+
+module.exports = AbortController
+module.exports.AbortController = module.exports["default"] = AbortController
+module.exports.AbortSignal = AbortSignal
+//# sourceMappingURL=abort-controller.js.map

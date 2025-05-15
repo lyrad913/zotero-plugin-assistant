@@ -8,7 +8,9 @@ import {
 import { getString, initLocale } from "./utils/locale";
 import { registerPrefsScripts } from "./modules/preferenceScript";
 import { createZToolkit } from "./utils/ztoolkit";
-import { registerAssistantPaneSection } from "./modules/readerPane"
+import { registerAssistantPaneSection } from "./modules/readerPane";
+
+import { getResponse } from "./modules/components/llm";
 
 async function onStartup() {
   await Promise.all([
@@ -51,6 +53,63 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
     `${addon.data.config.addonRef}-mainWindow.ftl`,
   );
 
+  // // TEST: Workspace Post
+  // try {
+  //   const chatEndpoint = "http://localhost:1234/v1/chat/completions";
+  //   const payload = {
+  //     model: "qwen2.5-7b-instruct-1m",
+  //     messages: [
+  //       { role: "user", content: "Direct fetch POST test from Zotero" },
+  //     ],
+  //     stream: false,
+  //   };
+  //   ztoolkit.log(`[Hooks.ts] Attempting DIRECT fetch POST to: ${chatEndpoint}`);
+  //   const directPostResponse = await fetch(chatEndpoint, {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(payload),
+  //   });
+
+  //   ztoolkit.log(
+  //     `[Hooks.ts] DIRECT fetch POST response status: ${directPostResponse.status}`,
+  //   );
+  //   if (directPostResponse.ok) {
+  //     const responseData = await directPostResponse.json(); // ★★★ 여기서 JSON 파싱 시도 ★★★
+  //     ztoolkit.log(
+  //       `[Hooks.ts] DIRECT fetch POST response data: ${JSON.stringify(responseData)}`,
+  //     );
+  //     // 성공 로그가 보이면 Zotero 환경 자체는 문제 없음
+  //   } else {
+  //     const errorText = await directPostResponse.text();
+  //     ztoolkit.log(
+  //       `[Hooks.ts] DIRECT fetch POST failed. Status: ${directPostResponse.status}, Text: ${errorText}`,
+  //     );
+  //     // 실패 시 원인 파악 필요
+  //   }
+  // } catch (fetchError) {
+  //   ztoolkit.log(`[Hooks.ts] DIRECT fetch POST Error caught.`);
+  //   if (fetchError instanceof Error) {
+  //     ztoolkit.log(
+  //       `[Hooks.ts] Direct fetch Error message: ${fetchError.message}. Stack: ${fetchError.stack}`,
+  //     );
+  //   } else {
+  //     ztoolkit.log(
+  //       `[Hooks.ts] Direct fetch Caught non-Error object or undefined: ${JSON.stringify(fetchError)}`,
+  //     );
+  //   }
+  //   // 실패 시 원인 파악 필요
+  // }
+
+  //TEST: getResponse
+  try {
+    const testQuestion = "Hello from Zotero Plugin! How are you?";
+    ztoolkit.log(`[LLM Test] Sending Question: ${testQuestion}`);
+    const response = await getResponse(testQuestion);
+    ztoolkit.log(`[LLM Test] Received response: ${response}`);
+  } catch (error) {
+    ztoolkit.log(`[LLM Test] Error : ${error}`);
+  }
+
   const popupWin = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
     closeOnClick: true,
     closeTime: -1,
@@ -62,11 +121,11 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
     })
     .show();
 
-  await Zotero.Promise.delay(1000);
-  popupWin.changeLine({
-    progress: 30,
-    text: `[30%] ${getString("startup-begin")}`,
-  });
+  // await Zotero.Promise.delay(1000);
+  // popupWin.changeLine({
+  //   progress: 30,
+  //   text: `[30%] ${getString("startup-begin")}`,
+  // });
 
   UIExampleFactory.registerStyleSheet(win);
 

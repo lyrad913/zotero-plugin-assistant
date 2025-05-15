@@ -6,7 +6,6 @@
  * [1] https://github.com/zotero/make-it-red
  * [2] https://www.zotero.org/support/dev/zotero_7_for_developers
  */
-
 var chromeHandle;
 
 function install(data, reason) {}
