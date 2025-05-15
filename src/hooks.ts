@@ -45,60 +45,10 @@ async function onStartup() {
 }
 
 async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
-  // Create ztoolkit for every window
-  // addon.data.ztoolkit = createZToolkit();
-
   // @ts-ignore This is a moz feature
   win.MozXULElement.insertFTLIfNeeded(
     `${addon.data.config.addonRef}-mainWindow.ftl`,
   );
-
-  // // TEST: Workspace Post
-  // try {
-  //   const chatEndpoint = "http://localhost:1234/v1/chat/completions";
-  //   const payload = {
-  //     model: "qwen2.5-7b-instruct-1m",
-  //     messages: [
-  //       { role: "user", content: "Direct fetch POST test from Zotero" },
-  //     ],
-  //     stream: false,
-  //   };
-  //   ztoolkit.log(`[Hooks.ts] Attempting DIRECT fetch POST to: ${chatEndpoint}`);
-  //   const directPostResponse = await fetch(chatEndpoint, {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify(payload),
-  //   });
-
-  //   ztoolkit.log(
-  //     `[Hooks.ts] DIRECT fetch POST response status: ${directPostResponse.status}`,
-  //   );
-  //   if (directPostResponse.ok) {
-  //     const responseData = await directPostResponse.json(); // ★★★ 여기서 JSON 파싱 시도 ★★★
-  //     ztoolkit.log(
-  //       `[Hooks.ts] DIRECT fetch POST response data: ${JSON.stringify(responseData)}`,
-  //     );
-  //     // 성공 로그가 보이면 Zotero 환경 자체는 문제 없음
-  //   } else {
-  //     const errorText = await directPostResponse.text();
-  //     ztoolkit.log(
-  //       `[Hooks.ts] DIRECT fetch POST failed. Status: ${directPostResponse.status}, Text: ${errorText}`,
-  //     );
-  //     // 실패 시 원인 파악 필요
-  //   }
-  // } catch (fetchError) {
-  //   ztoolkit.log(`[Hooks.ts] DIRECT fetch POST Error caught.`);
-  //   if (fetchError instanceof Error) {
-  //     ztoolkit.log(
-  //       `[Hooks.ts] Direct fetch Error message: ${fetchError.message}. Stack: ${fetchError.stack}`,
-  //     );
-  //   } else {
-  //     ztoolkit.log(
-  //       `[Hooks.ts] Direct fetch Caught non-Error object or undefined: ${JSON.stringify(fetchError)}`,
-  //     );
-  //   }
-  //   // 실패 시 원인 파악 필요
-  // }
 
   const popupWin = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
     closeOnClick: true,
