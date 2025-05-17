@@ -4,6 +4,8 @@ import { getPref } from '../utils/prefs';
 import { addMessage } from './components/ChatMessage'; // ChatMessage.ts 파일에서 addMessage 함수 가져오기
 import { getResponse } from './components/llm'
 
+const chatSystemPrompt = "You're an Helpful Assistant"
+
 export function registerAssistantPaneSection() {
     Zotero.ItemPaneManager.registerSection({
         paneID: "chat-with-pdf-tabpanel",
@@ -74,7 +76,7 @@ export function registerAssistantPaneSection() {
                             thinkingMessage.scrollTop = thinkingMessage.scrollHeight;
 
                             try {
-                                const response = await getResponse(question);
+                                const response = await getResponse(chatSystemPrompt, question);
 
                                 if (thinkingMessage && chatMessages.contains(thinkingMessage)) {
                                     // Remove the thinking message

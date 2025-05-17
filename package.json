@@ -8,7 +8,7 @@
     "addonID": "lyradortiz913@gmail.com",
     "addonRef": "addonassistant",
     "addonInstance": "AddonAssistant",
-    "prefsPrefix": "extensions.zotero.${addonRef}"
+    "prefsPrefix": "extensions.zotero.addonassistant"
   },
   "repository": {
     "type": "git",
