@@ -25,9 +25,7 @@ export async function getModelInstance(): Promise<Embeddings | null> {
   }
 
   ztoolkit.log("[llm.ts] LLM 인스턴스가 null입니다. 초기화를 시도합니다.");
-  const apiKey = getPref("embeddingApiKey"); // TODO: 외않대???
-  ztoolkit.log(`[llm.ts]: Watch the path ${config.prefsPrefix}`);
-  ztoolkit.log(`[llm.ts]: TEST getPref apiKey ${apiKey}`);
+  const apiKey = getPref("embeddingApiKey");
   const baseURL = getPref("embeddingBaseUrl");
   const modelName = getPref("embeddingModelName");
 
