@@ -18,7 +18,7 @@ export function resetEmbeddingInstance(): void {
   _currentModelName = null;
 }
 
-async function getModelInstance(): Promise<Embeddings | null> {
+export async function getModelInstance(): Promise<Embeddings | null> {
   if (embeddings) {
     // 이미 인스턴스가 존재하면 반환
     return embeddings;
