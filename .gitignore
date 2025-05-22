@@ -12,5 +12,8 @@ tsconfig.tsbuildinfo
 # Scaffold
 .env
 .scaffold
-build
+buil
+
+test.*
+*.pdf
 logs

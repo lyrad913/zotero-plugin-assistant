@@ -10,8 +10,6 @@ import { registerPrefsScripts } from "./modules/preferenceScript";
 import { createZToolkit } from "./utils/ztoolkit";
 import { registerAssistantPaneSection } from "./modules/readerPane";
 
-import { getResponse } from "./modules/components/llm";
-
 async function onStartup() {
   await Promise.all([
     Zotero.initializationPromise,
