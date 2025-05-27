@@ -26,6 +26,14 @@ export function registerAssistantPaneSection() {
              </div>
          </div>
          `,
+         onItemChange: ({ item, setEnabled, tabType }) => {
+                     ztoolkit.log(`[readerPane.ts] onItemChange - item ID: ${item?.id}, tabType: ${tabType}`); //
+                     // tabType이 'reader'일 경우에만 섹션을 활성화합니다.
+                     const shouldBeEnabled = tabType === "reader";
+                     setEnabled(shouldBeEnabled); //
+                     ztoolkit.log(`[readerPane.ts] Section enabled: ${shouldBeEnabled}`);
+                     return true; // 변경 사항을 적용하려면 true를 반환해야 합니다.
+                 },
         onRender: ({ body, item }) => {
             const chatContainer = body.querySelector('#chat-with-paper-container') as HTMLElement;
             const chatMessages = body.querySelector('#chat-messages') as HTMLElement;
