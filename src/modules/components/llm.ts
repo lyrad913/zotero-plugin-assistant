@@ -25,7 +25,8 @@ export function resetLLMInstance(): void {
   _currentModelTemperature = null;
 }
 
-async function getModelInstance(): Promise<BaseChatModel> { // 반환 타입을 Promise<ChatOpenAI>로 변경
+export async function getModelInstance(): Promise<BaseChatModel> {
+  // 반환 타입을 Promise<ChatOpenAI>로 변경
   const apiKey = getPref("llmApiKey");
   const baseURL = getPref("llmBaseUrl");
   const modelName = getPref("llmModelName");
@@ -33,9 +34,9 @@ async function getModelInstance(): Promise<BaseChatModel> { // 반환 타입을 
 
   // temperature 값 처리: number 타입이어야 함
   let temperature: number | undefined;
-  if (typeof prefTemperature === 'number') {
+  if (typeof prefTemperature === "number") {
     temperature = prefTemperature;
-  } else if (typeof prefTemperature === 'string') {
+  } else if (typeof prefTemperature === "string") {
     const parsedTemp = parseFloat(prefTemperature);
     if (!isNaN(parsedTemp)) {
       temperature = parsedTemp;
@@ -55,12 +56,19 @@ async function getModelInstance(): Promise<BaseChatModel> { // 반환 타입을 
       "[llm.ts] LLM 인스턴스가 없거나 설정이 변경되어 초기화를 시도합니다.",
     );
 
-    if (!apiKey || !baseURL || !modelName || typeof temperature === 'undefined') {
+    if (
+      !apiKey ||
+      !baseURL ||
+      !modelName ||
+      typeof temperature === "undefined"
+    ) {
       const missingSettings = [
         !apiKey ? "API Key" : null,
         !baseURL ? "Base URL" : null,
         !modelName ? "Model Name" : null,
-        typeof temperature === 'undefined' ? "Temperature (must be a valid number)" : null,
+        typeof temperature === "undefined"
+          ? "Temperature (must be a valid number)"
+          : null,
       ]
         .filter(Boolean)
         .join(", ");
