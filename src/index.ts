@@ -1,5 +1,5 @@
 // Solving an Error "ReadableStream is not defined."
-import 'web-streams-polyfill/polyfill';
+import "web-streams-polyfill/polyfill";
 _globalThis.ReadableStream = ReadableStream;
 
 import { BasicTool } from "zotero-plugin-toolkit";
@@ -29,8 +29,8 @@ function defineGlobal(name: string, getter?: () => any) {
 }
 
 // Solving Dependecy of Langchain.js
-_globalThis.Headers = ztoolkit.getGlobal('Headers');
-_globalThis.Request = ztoolkit.getGlobal('Request');
-_globalThis.Response = ztoolkit.getGlobal('Response');
+_globalThis.Headers = ztoolkit.getGlobal("Headers");
+_globalThis.Request = ztoolkit.getGlobal("Request");
+_globalThis.Response = ztoolkit.getGlobal("Response");
 _globalThis.AbortSignal = ztoolkit.getGlobal("AbortSignal");
 _globalThis.AbortController = ztoolkit.getGlobal("AbortController");

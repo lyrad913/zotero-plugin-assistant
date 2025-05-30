@@ -1,5 +1,6 @@
 import { defineConfig } from "zotero-plugin-scaffold";
 import pkg from "./package.json";
+// import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 export default defineConfig({
   source: ["src", "addon"],
@@ -33,11 +34,13 @@ export default defineConfig({
           __env__: `"${process.env.NODE_ENV}"`,
         },
         bundle: true,
+        // plugins: [polyfillNode({})],
         target: "firefox115",
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
+        // platform: "node"
       },
     ],
   },
   // If you need to see a more detailed log, uncomment the following line:
-  // logLevel: "trace",
+  logLevel: "TRACE",
 });

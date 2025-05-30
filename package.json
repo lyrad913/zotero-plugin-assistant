@@ -30,7 +30,7 @@
     "update-deps": "npm update --save"
   },
   "dependencies": {
-    "@langchain/community": "^0.3.43",
+    "@langchain/community": "^0.3.45",
     "@langchain/core": "^0.3.56",
     "@langchain/langgraph": "^0.2.72",
     "@langchain/ollama": "^0.2.0",
@@ -39,6 +39,7 @@
     "abort-controller": "^3.0.0",
     "abortcontroller-polyfill": "^1.7.8",
     "cheerio": "^1.0.0",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "faiss-node": "^0.5.1",
     "langchain": "^0.3.24",
     "native-abort-controller": "^1.0.4",

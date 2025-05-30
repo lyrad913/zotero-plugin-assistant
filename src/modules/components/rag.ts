@@ -18,10 +18,7 @@ import {
   Annotation,
 } from "@langchain/langgraph";
 import { v4 as uuidv4 } from "uuid";
-
-const llm = await getModelInstance();
-
-const embeddings = await getEmbeddingInstance();
+import { Embeddings } from "@langchain/core/embeddings";
 
 function formatDocs(docs, joinSeparator = "\n") {
   return docs
@@ -60,7 +57,7 @@ async function split(pdfPath: string) {
   return allSplits;
 }
 
-async function embedAndStore(pdfPath: string) {
+async function embedAndStore(pdfPath: string, embeddings: Embeddings) {
   try {
     const vectorStore = new FaissStore(embeddings, {});
     const allSplits = await split(pdfPath);
@@ -71,127 +68,129 @@ async function embedAndStore(pdfPath: string) {
   }
 }
 
-const vectorStore = await embedAndStore("./1706.03762v7.pdf");
-const retriever = vectorStore.asRetriever({
-  k: 10,
-});
+export async function getResponseByGraph(
+  question: string,
+  pdfPath: string,
+): Promise<string> {
+  const llm = await getModelInstance();
 
-const contextualizeQSystemPrompt =
-  "Given a chat history and the latest user question " +
-  "which might reference context in the chat history, " +
-  "formulate a standalone question which can be understood " +
-  "without the chat history. Do NOT answer the question, " +
-  "just reformulate it if needed and otherwise return it as is.";
+  const embeddings = await getEmbeddingInstance();
 
-const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
-  ["system", contextualizeQSystemPrompt],
-  new MessagesPlaceholder("chat_history"),
-  ["human", "{input}"],
-]);
-
-const historyAwareRetriever = await createHistoryAwareRetriever({
-  llm: llm,
-  retriever: retriever,
-  rephrasePrompt: contextualizeQPrompt,
-});
-
-const systemPrompt =
-  "You are an assistant for question-answering tasks. " +
-  "Use the following pieces of retrieved context to answer " +
-  "the question. If you don't know the answer, say that you " +
-  "don't know. Use three sentences maximum and keep the " +
-  "answer concise." +
-  "\n\n" +
-  "{context}";
-
-const qaPrompt = ChatPromptTemplate.fromMessages([
-  ["system", systemPrompt],
-  new MessagesPlaceholder("chat_history"),
-  ["human", "{input}"],
-]);
-
-const questionAnswerChain = qaPrompt.pipe(llm);
-
-// Define the State interface
-const GraphAnnotation = Annotation.Root({
-  input: Annotation<string>(),
-  chat_history: Annotation<BaseMessage[]>({
-    reducer: messagesStateReducer,
-    default: () => [],
-  }),
-  context: Annotation<string>(),
-  answer: Annotation<string>(),
-});
-
-async function retrieveDocument(state: typeof GraphAnnotation.State) {
-  const latestQuestion = state.input;
-  const chatHistory = state.chat_history;
-
-  const retrievedDocs = await historyAwareRetriever.invoke({
-    input: latestQuestion,
-    chat_history: chatHistory,
+  const vectorStore = await embedAndStore(pdfPath, embeddings);
+  const retriever = vectorStore.asRetriever({
+    k: 10,
   });
 
-  const formattedDocs = await formatDocs(retrievedDocs);
+  const contextualizeQSystemPrompt =
+    "Given a chat history and the latest user question " +
+    "which might reference context in the chat history, " +
+    "formulate a standalone question which can be understood " +
+    "without the chat history. Do NOT answer the question, " +
+    "just reformulate it if needed and otherwise return it as is.";
 
-  return { context: formattedDocs };
-}
+  const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
+    ["system", contextualizeQSystemPrompt],
+    new MessagesPlaceholder("chat_history"),
+    ["human", "{input}"],
+  ]);
 
-async function callModel(state: typeof GraphAnnotation.State) {
-  const latestQuestion = state.input;
-  const context = state.context;
-  const chatHistory = state.chat_history;
-
-  const response = await questionAnswerChain.invoke({
-    chat_history: chatHistory,
-    input: latestQuestion,
-    context: context,
+  const historyAwareRetriever = await createHistoryAwareRetriever({
+    llm: llm,
+    retriever: retriever,
+    rephrasePrompt: contextualizeQPrompt,
   });
 
-  return {
-    answer: response.content,
-    chat_history: [
-      new HumanMessage(latestQuestion),
-      new AIMessage(response.content.toString()),
-    ],
-  };
-}
+  const systemPrompt =
+    "You are an assistant for question-answering tasks. " +
+    "Use the following pieces of retrieved context to answer " +
+    "the question. If you don't know the answer, say that you " +
+    "don't know. Use three sentences maximum and keep the " +
+    "answer concise." +
+    "\n\n" +
+    "{context}";
 
-// Create the workflow
-const graph = new StateGraph(GraphAnnotation)
-  .addNode("model", callModel)
-  .addNode("retrieve_and_format", retrieveDocument)
-  .addEdge(START, "retrieve_and_format")
-  .addEdge("retrieve_and_format", "model")
-  .addEdge("model", END);
+  const qaPrompt = ChatPromptTemplate.fromMessages([
+    ["system", systemPrompt],
+    new MessagesPlaceholder("chat_history"),
+    ["human", "{input}"],
+  ]);
 
-// Compile the graph with a checkpointer object
-const memory = new MemorySaver();
-const app = graph.compile({ checkpointer: memory });
+  const questionAnswerChain = qaPrompt.pipe(llm);
 
-const threadId = uuidv4();
-const config = { configurable: { thread_id: threadId } };
+  // Define the State interface
+  const GraphAnnotation = Annotation.Root({
+    input: Annotation<string>(),
+    chat_history: Annotation<BaseMessage[]>({
+      reducer: messagesStateReducer,
+      default: () => [],
+    }),
+    context: Annotation<string>(),
+    answer: Annotation<string>(),
+  });
 
-import { isAIMessageChunk } from "@langchain/core/messages";
+  async function retrieveDocument(state: typeof GraphAnnotation.State) {
+    const latestQuestion = state.input;
+    const chatHistory = state.chat_history;
 
-const stream = await app.stream(
-  { input: "Explain Attention Mechanism" },
-  { streamMode: "messages", ...config },
-);
+    const retrievedDocs = await historyAwareRetriever.invoke({
+      input: latestQuestion,
+      chat_history: chatHistory,
+    });
 
-for await (const [message, _metadata] of stream) {
-  if (isAIMessageChunk(message)) {
-    console.log(`${message.getType()} MESSAGE CONTENT: ${message.content}`);
+    const formattedDocs = await formatDocs(retrievedDocs);
+
+    return { context: formattedDocs };
   }
-}
 
-const stream2 = await app.stream(
-  { input: "Explain Transformer Model" },
-  { streamMode: "messages", ...config },
-);
+  async function callModel(state: typeof GraphAnnotation.State) {
+    const latestQuestion = state.input;
+    const context = state.context;
+    const chatHistory = state.chat_history;
 
-for await (const [message, _metadata] of stream2) {
-  if (isAIMessageChunk(message)) {
-    console.log(`${message.getType()} MESSAGE CONTENT: ${message.content}`);
+    const response = await questionAnswerChain.invoke({
+      chat_history: chatHistory,
+      input: latestQuestion,
+      context: context,
+    });
+
+    return {
+      answer: response.content,
+      chat_history: [
+        new HumanMessage(latestQuestion),
+        new AIMessage(response.content.toString()),
+      ],
+    };
   }
+
+  // Create the workflow
+  const graph = new StateGraph(GraphAnnotation)
+    .addNode("model", callModel)
+    .addNode("retrieve_and_format", retrieveDocument)
+    .addEdge(START, "retrieve_and_format")
+    .addEdge("retrieve_and_format", "model")
+    .addEdge("model", END);
+
+  // Compile the graph with a checkpointer object
+  const memory = new MemorySaver();
+  const app = graph.compile({ checkpointer: memory });
+
+  const threadId = uuidv4();
+  const config = { configurable: { thread_id: threadId } };
+
+  // import { isAIMessageChunk } from "@langchain/core/messages";
+
+  // const stream = await app.stream(
+  //   { input: "Explain Attention Mechanism" },
+  //   { streamMode: "messages", ...config },
+  // );
+
+  // for await (const [message, _metadata] of stream) {
+  //   if (isAIMessageChunk(message)) {
+  //     console.log(`${message.getType()} MESSAGE CONTENT: ${message.content}`);
+  //   }
+  // }
+
+  const response = await app.invoke({ input: question }, { ...config });
+
+  return response.answer.toString();
 }
