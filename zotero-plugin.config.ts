@@ -1,6 +1,6 @@
 import { defineConfig } from "zotero-plugin-scaffold";
 import pkg from "./package.json";
-// import { polyfillNode } from "esbuild-plugin-polyfill-node";
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 export default defineConfig({
   source: ["src", "addon"],
@@ -23,6 +23,7 @@ export default defineConfig({
       homepage: pkg.homepage,
       buildVersion: pkg.version,
       buildTime: "{{buildTime}}",
+
     },
     prefs: {
       prefix: pkg.config.prefsPrefix,
@@ -32,9 +33,17 @@ export default defineConfig({
         entryPoints: ["src/index.ts"],
         define: {
           __env__: `"${process.env.NODE_ENV}"`,
+          "console.error": "Zotero.debug",
+          "console.log": "Zotero.debug"
         },
         bundle: true,
-        // plugins: [polyfillNode({})],
+        plugins: [polyfillNode({
+          polyfills:{
+            fs: true,
+            "fs/promises": true,
+            // async_hooks: false,
+          }
+        })],
         target: "firefox115",
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
         // platform: "node"

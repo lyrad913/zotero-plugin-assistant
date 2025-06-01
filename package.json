@@ -45,6 +45,7 @@
     "native-abort-controller": "^1.0.4",
     "node-fetch": "^2.7.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.2.133",
     "tslab": "^1.0.22",
     "web-streams-polyfill": "^4.1.0",
     "zotero-plugin-toolkit": "^5.0.0-0"

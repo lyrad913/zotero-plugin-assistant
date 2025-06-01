@@ -1,6 +1,6 @@
 import { getModelInstance } from "./llm";
 import { getEmbeddingInstance } from "./embeddings";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import {
@@ -16,9 +16,10 @@ import {
   MemorySaver,
   messagesStateReducer,
   Annotation,
-} from "@langchain/langgraph";
+} from "@langchain/langgraph/web";
 import { v4 as uuidv4 } from "uuid";
 import { Embeddings } from "@langchain/core/embeddings";
+
 
 function formatDocs(docs, joinSeparator = "\n") {
   return docs
@@ -42,8 +43,17 @@ function formatDocs(docs, joinSeparator = "\n") {
     .join(joinSeparator);
 }
 
-async function split(pdfPath: string) {
-  const loader = new PDFLoader(pdfPath);
+async function split(pdfURI: string) {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.min.mjs");
+  const pdfjsWorker = await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+  const res = await ztoolkit.getGlobal("fetch")(pdfURI);
+  const pdfBlob = await res.blob();
+
+  const loader = new WebPDFLoader(pdfBlob, {
+    pdfjs: async () => pdfjs,
+  });
 
   const docs = await loader.load();
 
@@ -64,7 +74,7 @@ async function embedAndStore(pdfPath: string, embeddings: Embeddings) {
     await vectorStore.addDocuments(allSplits);
     return vectorStore;
   } catch (error) {
-    console.log(error);
+    ztoolkit.log(error);
   }
 }
 

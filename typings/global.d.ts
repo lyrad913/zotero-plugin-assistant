@@ -16,3 +16,7 @@ declare const rootURI: string;
 declare const addon: import("../src/addon").default;
 
 declare const __env__: "production" | "development";
+
+declare module 'pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js';
+declare module "pdfjs-dist/legacy/build/pdf.worker.min.mjs";
+declare module "pdfjs-dist/legacy/build/pdf.min.mjs";

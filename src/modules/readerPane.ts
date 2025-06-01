@@ -4,6 +4,8 @@ import { getPref } from "../utils/prefs";
 import { getResponseByGraph } from "./components/rag";
 import { addMessage } from "./components/ChatMessage"; // ChatMessage.ts 파일에서 addMessage 함수 가져오기
 import { getResponse } from "./components/llm";
+import { AsyncGeneratorWithSetup } from "@langchain/core/utils/stream";
+
 
 const chatSystemPrompt = "You're an Helpful Assistant";
 
@@ -32,15 +34,29 @@ export function registerAssistantPaneSection() {
         `[readerPane.ts] onItemChange - item ID: ${item?.id}, tabType: ${tabType}`,
       ); //
       // tabType이 'reader'일 경우에만 섹션을 활성화합니다.
-      const shouldBeEnabled = tabType === "reader";
-      setEnabled(shouldBeEnabled); //
+      const shouldBeEnabled = tabType === "reader";      setEnabled(shouldBeEnabled); //
       ztoolkit.log(`[readerPane.ts] Section enabled: ${shouldBeEnabled}`);
       return true; // 변경 사항을 적용하려면 true를 반환해야 합니다.
     },
-    onRender: ({ body, item }) => {
-      const pdfPath = item.attachmentPath;
-      const pdfText = await item.attachmentText;
-      ztoolkit.log(pdfText);
+    onRender: async ({ body, item }) => {
+      let pdfURI = "";
+      if (!item.isAttachment()) {
+        const attachments = item.getAttachments();
+        for(const attachmentID of attachments){
+          const attachment = Zotero.Items.get(attachmentID);
+          if (attachment.attachmentContentType === "application/pdf" || attachment.attachmentContentType === "") {
+            try {
+              const pdfPath = await attachment.getFilePathAsync();
+              ztoolkit.log(`File Path : ${pdfPath}`);
+              pdfURI = Zotero.File.pathToFileURI(pdfPath);
+              break;
+            } catch (error) {
+              ztoolkit.log(error);
+            }
+          }
+        }
+      }
+
       const chatContainer = body.querySelector(
         "#chat-with-paper-container",
       ) as HTMLElement;
@@ -94,9 +110,8 @@ export function registerAssistantPaneSection() {
               thinkingMessage.scrollTop = thinkingMessage.scrollHeight;
 
               try {
-                const response = await getResponse(chatSystemPrompt, question);
-                // TODO: how to get pdfpath?
-                // const response = await getResponseByGraph(pdfPath, question);
+                // const response = await getResponse(chatSystemPrompt, question);
+                const response = await getResponseByGraph(question, pdfURI);
 
                 if (thinkingMessage && chatMessages.contains(thinkingMessage)) {
                   // Remove the thinking message
