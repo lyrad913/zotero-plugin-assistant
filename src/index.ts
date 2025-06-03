@@ -2,6 +2,8 @@
 import "web-streams-polyfill/polyfill";
 _globalThis.ReadableStream = ReadableStream;
 
+_globalThis.window = _globalThis;
+
 import { BasicTool } from "zotero-plugin-toolkit";
 import Addon from "./addon";
 import { config } from "../package.json";
@@ -27,7 +29,7 @@ function defineGlobal(name: string, getter?: () => any) {
     },
   });
 }
-
+ztoolkit.log(`Root URI : ${ rootURI }/js/pdf.worker.js`)
 // Solving Dependecy of Langchain.js
 _globalThis.Headers = ztoolkit.getGlobal("Headers");
 _globalThis.Request = ztoolkit.getGlobal("Request");

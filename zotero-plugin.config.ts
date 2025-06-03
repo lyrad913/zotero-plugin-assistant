@@ -34,19 +34,23 @@ export default defineConfig({
         define: {
           __env__: `"${process.env.NODE_ENV}"`,
           "console.error": "Zotero.debug",
-          "console.log": "Zotero.debug"
+          "console.log": "Zotero.debug",
+
         },
         bundle: true,
         plugins: [polyfillNode({
-          polyfills:{
+          polyfills: {
             fs: true,
             "fs/promises": true,
-            // async_hooks: false,
           }
         })],
         target: "firefox115",
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
-        // platform: "node"
+      },
+      {
+        entryPoints: ["node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+        bundle: false,
+        outfile: `.scaffold/build/addon/content/js/pdf.worker.js`,
       },
     ],
   },
