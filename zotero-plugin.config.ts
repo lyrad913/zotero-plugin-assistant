@@ -47,11 +47,11 @@ export default defineConfig({
         target: "firefox115",
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
       },
-      {
-        entryPoints: ["node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
-        bundle: false,
-        outfile: `.scaffold/build/addon/content/js/pdf.worker.js`,
-      },
+      // {
+      //   entryPoints: ["node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+      //   // bundle: false,
+      //   outfile: `.scaffold/build/addon/content/js/pdf.worker.js`,
+      // },
     ],
   },
   // If you need to see a more detailed log, uncomment the following line:
