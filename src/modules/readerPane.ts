@@ -1,7 +1,7 @@
 import { config } from "../../package.json";
 import { getLocaleID, getString } from "../utils/locale";
 import { getPref } from "../utils/prefs";
-import { getResponseByGraph, simpleWorkerTest } from "./components/rag";
+import { getResponseByGraph } from "./components/rag";
 import { addMessage } from "./components/ChatMessage"; // ChatMessage.ts 파일에서 addMessage 함수 가져오기
 import { getResponse } from "./components/llm";
 import { AsyncGeneratorWithSetup } from "@langchain/core/utils/stream";
@@ -37,7 +37,6 @@ export function registerAssistantPaneSection() {
     },
     onRender: async ({ body, item }) => {
       let pdfURI = "";
-      simpleWorkerTest();
       if (!item.isAttachment()) {
         const attachments = item.getAttachments();
         for(const attachmentID of attachments){

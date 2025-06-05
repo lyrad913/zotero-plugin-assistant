@@ -45,6 +45,7 @@ export default defineConfig({
           }
         })],
         target: "firefox115",
+        external: ['resource://*', 'chrome://*'],
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
       },
       {
@@ -55,7 +56,13 @@ export default defineConfig({
         bundle: true,
         target: "firefox115", // 또는 Zotero 호환 버전
         outfile: `.scaffold/build/addon/content/scripts/rag-worker.js`, // 출력 파일 경로
-        external: ['resource://*', 'chrome://*'], // 워커에서도 external 설정 필요
+        plugins: [polyfillNode({
+          polyfills: {
+            fs: true,
+            "fs/promises": true,
+          }
+        })],
+        external: ['resource://*', 'chrome://*'],
         format: "esm"
         // 워커는 format: 'esm'이 필요할 수 있습니다. 테스트 필요.
       },

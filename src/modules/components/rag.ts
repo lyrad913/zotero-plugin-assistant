@@ -1,8 +1,6 @@
 import { getModelInstance } from "./llm";
 import { getEmbeddingInstance } from "./embeddings";
-import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -18,10 +16,7 @@ import {
   Annotation,
 } from "@langchain/langgraph/web";
 import { v4 as uuidv4 } from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
-import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
-import { config, name as packageName } from "../../../package.json";
 
 function formatDocs(docs, joinSeparator = "\n") {
   return docs
@@ -46,46 +41,53 @@ function formatDocs(docs, joinSeparator = "\n") {
 }
 
 async function split(pdfURI: string) {
-  // const pdfjs = await import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js");
-  // pdfjs.GlobalWorkerOptions.workerSrc = `${rootURI}/content/scripts/pdf.worker.js`;
-  //
-  // @ts-ignore xxx
-  let require = ztoolkit.getGlobal("window").require;
-  if (typeof require == "undefined") {
-    require = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-      .getService(Components.interfaces.mozIJSSubScriptLoader)
-      .loadSubScript("resource://zotero/require.js");
-  }
-
   const res = await ztoolkit.getGlobal("fetch")(pdfURI);
   const pdfBlob = await res.blob();
 
-  const loader = new WebPDFLoader(pdfBlob, { pdfjs: () => pdfjsLib });
+  return new Promise((resolve, reject) => {
+    const load_worker = new ChromeWorker(
+      `chrome://${addon.data.config.addonRef}/content/scripts/rag-worker.js`,
+      { type: 'module' }
+    );
+    ztoolkit.log("[rag.ts] 워커에게 메세지 전송");
+    load_worker.postMessage({ pdfBlob: pdfBlob });
 
-  const docs = await loader.load();
+    load_worker.onmessage = function (event) {
+      ztoolkit.log("[rag.ts] 워커로부터 메세지 수신");
+      // 워커가 보낸 메시지에 type 필드가 있는지 먼저 확인
+      const messageData = event.data;
+      ztoolkit.log("[rag.ts] Worker로부터 메시지 수신:", messageData);
+      if (messageData && typeof messageData.type === 'string') {
+        const { type, allSplits, error } = messageData;
 
-  ztoolkit.log(`[rag.ts]Docs : ${docs}`);
-
-  const textSplitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
+        if (type === "SUCCESS" && allSplits) {
+          // @ts-ignore
+          ztoolkit.log(`[rag.ts] Worker로부터 'allSplits' 수신: ${allSplits.length}개 분할`);
+          resolve(allSplits as Document[]);
+          load_worker.terminate(); // 성공 시 워커 종료
+        } else if (type === "SHIT") { // 워커에서 정의한 오류 타입
+          // @ts-ignore xxx
+          ztoolkit.error("[rag.ts] Worker로부터 오류 수신 ('SHIT'):", error);
+          const errorMessage = error?.message || (typeof error === 'string' ? error : "Worker에서 알 수 없는 오류 발생");
+          reject(new Error(errorMessage));
+          load_worker.terminate(); // 오류 시 워커 종료
+        } else {
+          // @ts-ignore xxx
+          // type 필드는 있지만 "SUCCESS"나 "SHIT"가 아닌 경우 (예상치 못한 상황)
+          ztoolkit.warn("[rag.ts] Worker로부터 알 수 없는 유형의 메시지 수신:", messageData);
+          // 이 경우, 바로 reject하지 않고 다른 메시지를 기다릴 수도 있지만,
+          // 현재 워커 로직상으로는 SUCCESS 또는 SHIT만 보내므로 오류로 간주할 수 있습니다.
+          // reject(new Error("Worker로부터 알 수 없는 유형의 메시지 수신"));
+          // load_worker.terminate();
+        }
+      } else {
+        // type 필드가 없는 메시지 (예: "ready" 메시지). 일단 무시하고 다음 메시지를 기다립니다.
+        // @ts-ignore xxx
+        ztoolkit.log("[rag.ts] Worker로부터 'type' 필드가 없는 메시지 수신 (무시):", messageData);
+      }
+    };
   });
-
-  const allSplits = await textSplitter.splitDocuments(docs);
-
-  ztoolkit.log(`[rag.ts] All Spilts : ${allSplits}`);
-
-  return allSplits;
 }
-
-// async function embedAndStore(pdfURI: string, embeddings: Embeddings) {
-//   try {
-
-//     return vectorStore;
-//   } catch (error) {
-//     ztoolkit.log(error);
-//   }
-// }
 
 export async function getResponseByGraph(
   pdfURI: string,
@@ -96,7 +98,7 @@ export async function getResponseByGraph(
   const embeddings = await getEmbeddingInstance();
 
   const allSplits = await split(pdfURI);
-  const vectorStore = new FaissStore(embeddings, {});
+  const vectorStore = new MemoryVectorStore(embeddings, {});
   await vectorStore.addDocuments(allSplits);
 
   const retriever = vectorStore.asRetriever({
@@ -166,8 +168,11 @@ export async function getResponseByGraph(
 
   async function callModel(state: typeof GraphAnnotation.State) {
     const latestQuestion = state.input;
+    ztoolkit.log(`[rag.ts] latestQuestion: ${latestQuestion}`)
     const context = state.context;
+    ztoolkit.log(`[rag.ts] context: ${context}`)
     const chatHistory = state.chat_history;
+    ztoolkit.log(`[rag.ts] chatHistory: ${chatHistory}`)
 
     const response = await questionAnswerChain.invoke({
       chat_history: chatHistory,
@@ -198,19 +203,6 @@ export async function getResponseByGraph(
 
   const threadId = uuidv4();
   const config = { configurable: { thread_id: threadId } };
-
-  // import { isAIMessageChunk } from "@langchain/core/messages";
-
-  // const stream = await app.stream(
-  //   { input: "Explain Attention Mechanism" },
-  //   { streamMode: "messages", ...config },
-  // );
-
-  // for await (const [message, _metadata] of stream) {
-  //   if (isAIMessageChunk(message)) {
-  //     console.log(`${message.getType()} MESSAGE CONTENT: ${message.content}`);
-  //   }
-  // }
 
   const response = await app.invoke({ input: question }, { ...config });
 
