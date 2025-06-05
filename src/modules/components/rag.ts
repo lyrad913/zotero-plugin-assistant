@@ -21,10 +21,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Embeddings } from "@langchain/core/embeddings";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-
-
-
+import { config, name as packageName } from "../../../package.json";
 
 function formatDocs(docs, joinSeparator = "\n") {
   return docs
@@ -55,23 +52,15 @@ async function split(pdfURI: string) {
   // @ts-ignore xxx
   let require = ztoolkit.getGlobal("window").require;
   if (typeof require == "undefined") {
-      require = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-          .getService(Components.interfaces.mozIJSSubScriptLoader)
-          .loadSubScript("resource://zotero/require.js");
+    require = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+      .getService(Components.interfaces.mozIJSSubScriptLoader)
+      .loadSubScript("resource://zotero/require.js");
   }
-
-  const URL = require('url').URL;
-  const pdfUrl = "resource://zotero/reader/pdf/build/pdf.js";
-  const workerSrcUrl = "resource://zotero/reader/pdf/build/pdf.worker.js";
-  const pdfjsLib = require(pdfUrl);
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrcUrl;
 
   const res = await ztoolkit.getGlobal("fetch")(pdfURI);
   const pdfBlob = await res.blob();
 
-  const loader = new WebPDFLoader(pdfBlob,
-    { pdfjs: () => pdfjsLib }
-  );
+  const loader = new WebPDFLoader(pdfBlob, { pdfjs: () => pdfjsLib });
 
   const docs = await loader.load();
 
@@ -89,26 +78,27 @@ async function split(pdfURI: string) {
   return allSplits;
 }
 
-async function embedAndStore(pdfPath: string, embeddings: Embeddings) {
-  try {
-    const vectorStore = new FaissStore(embeddings, {});
-    const allSplits = await split(pdfPath);
-    await vectorStore.addDocuments(allSplits);
-    return vectorStore;
-  } catch (error) {
-    ztoolkit.log(error);
-  }
-}
+// async function embedAndStore(pdfURI: string, embeddings: Embeddings) {
+//   try {
+
+//     return vectorStore;
+//   } catch (error) {
+//     ztoolkit.log(error);
+//   }
+// }
 
 export async function getResponseByGraph(
+  pdfURI: string,
   question: string,
-  pdfPath: string,
 ): Promise<string> {
   const llm = await getModelInstance();
 
   const embeddings = await getEmbeddingInstance();
 
-  const vectorStore = await embedAndStore(pdfPath, embeddings);
+  const allSplits = await split(pdfURI);
+  const vectorStore = new FaissStore(embeddings, {});
+  await vectorStore.addDocuments(allSplits);
+
   const retriever = vectorStore.asRetriever({
     k: 10,
   });

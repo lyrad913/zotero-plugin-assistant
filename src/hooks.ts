@@ -21,20 +21,6 @@ async function onStartup() {
 
   BasicExampleFactory.registerPrefs();
 
-  // BasicExampleFactory.registerNotifier();
-
-  // KeyExampleFactory.registerShortcuts();
-
-  // await UIExampleFactory.registerExtraColumn();
-
-  // await UIExampleFactory.registerExtraColumnWithCustomCell();
-
-  // UIExampleFactory.registerItemPaneCustomInfoRow();
-
-  // UIExampleFactory.registerItemPaneSection();
-
-  // UIExampleFactory.registerReaderItemPaneSection();
-
   registerAssistantPaneSection();
 
   await Promise.all(

@@ -1,7 +1,7 @@
 import { config } from "../../package.json";
 import { getLocaleID, getString } from "../utils/locale";
 import { getPref } from "../utils/prefs";
-import { getResponseByGraph } from "./components/rag";
+import { getResponseByGraph, simpleWorkerTest } from "./components/rag";
 import { addMessage } from "./components/ChatMessage"; // ChatMessage.ts 파일에서 addMessage 함수 가져오기
 import { getResponse } from "./components/llm";
 import { AsyncGeneratorWithSetup } from "@langchain/core/utils/stream";
@@ -30,16 +30,14 @@ export function registerAssistantPaneSection() {
          </div>
          `,
     onItemChange: ({ item, setEnabled, tabType }) => {
-      ztoolkit.log(
-        `[readerPane.ts] onItemChange - item ID: ${item?.id}, tabType: ${tabType}`,
-      ); //
       // tabType이 'reader'일 경우에만 섹션을 활성화합니다.
-      const shouldBeEnabled = tabType === "reader";      setEnabled(shouldBeEnabled); //
-      ztoolkit.log(`[readerPane.ts] Section enabled: ${shouldBeEnabled}`);
+      const shouldBeEnabled = tabType === "reader";
+      setEnabled(shouldBeEnabled); //
       return true; // 변경 사항을 적용하려면 true를 반환해야 합니다.
     },
     onRender: async ({ body, item }) => {
       let pdfURI = "";
+      simpleWorkerTest();
       if (!item.isAttachment()) {
         const attachments = item.getAttachments();
         for(const attachmentID of attachments){
@@ -111,7 +109,7 @@ export function registerAssistantPaneSection() {
 
               try {
                 // const response = await getResponse(chatSystemPrompt, question);
-                const response = await getResponseByGraph(question, pdfURI);
+                const response = await getResponseByGraph(pdfURI, question);
 
                 if (thinkingMessage && chatMessages.contains(thinkingMessage)) {
                   // Remove the thinking message
