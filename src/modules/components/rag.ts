@@ -5,6 +5,8 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -42,8 +44,7 @@ function formatDocs(docs, joinSeparator = "\n") {
 
 async function split(pdfURI: string) {
   const res = await fetch(pdfURI);
-  const tempBlob = await res.blob();
-  const pdfBlob = tempBlob.slice();
+  const pdfBlob = await res.blob();
 
   return new Promise((resolve, reject) => {
     const load_worker = new ChromeWorker(
@@ -90,127 +91,210 @@ async function split(pdfURI: string) {
   });
 }
 
-export async function getResponseByGraph(
+// langgraph의 MemorySaver를 대체할 간단한 인-메모리 대화 기록 저장소
+const chatHistories: Record<string, BaseMessage[]> = {};
+
+export async function getResponse(
   pdfURI: string,
   question: string,
-  threadID: string,
+  threadID: string
 ): Promise<string> {
   const llm = await getModelInstance();
-
   const embeddings = await getEmbeddingInstance();
-
   const allSplits = await split(pdfURI);
   const vectorStore = new MemoryVectorStore(embeddings, {});
   await vectorStore.addDocuments(allSplits);
+  const retriever = vectorStore.asRetriever({ k: 5 });
 
-  const retriever = vectorStore.asRetriever({
-    k: 10,
-  });
-
+  // 1. 대화 기록을 고려하여 질문을 재구성하는 체인 생성
   const contextualizeQSystemPrompt =
     "Given a chat history and the latest user question " +
     "which might reference context in the chat history, " +
     "formulate a standalone question which can be understood " +
     "without the chat history. Do NOT answer the question, " +
     "just reformulate it if needed and otherwise return it as is.";
-
   const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
     ["system", contextualizeQSystemPrompt],
     new MessagesPlaceholder("chat_history"),
     ["human", "{input}"],
   ]);
-
   const historyAwareRetriever = await createHistoryAwareRetriever({
-    llm: llm,
-    retriever: retriever,
+    llm,
+    retriever,
     rephrasePrompt: contextualizeQPrompt,
   });
 
-  const systemPrompt =
-    "You are an assistant for question-answering tasks. " +
-    "Use the following pieces of retrieved context to answer " +
-    "the question. If you don't know the answer, say that you " +
-    "don't know. Use three sentences maximum and keep the " +
-    "answer concise." +
-    "\n\n" +
-    "{context}";
+  // 2. 검색된 문서를 바탕으로 답변을 생성하는 체인 생성
+  const systemPrompt =  `You are a highly skilled AI assistant specializing in analyzing provided documents to answer user questions. Your primary goal is to provide accurate and concise answers based **exclusively** on the given context.
 
+ Follow these instructions carefully:
+ 1.  **Analyze and Synthesize:** Read the user's question and the retrieved context below. Generate an answer using **only** the information from the context. Do not use any external or prior knowledge.
+ 2.  **Language Match:** The answer **MUST** be in the same language as the user's question. (e.g., a Korean question requires a Korean answer).
+ 3.  **Preserve Terminology:** Do **NOT** translate technical terms, proper nouns, model names, or acronyms. Keep them in their original form.
+ 4.  **Conciseness:** Keep your answer to a maximum of 3-4 sentences, unless the user requests more detail. Be direct and to the point.
+ 5.  **Fallback:** If the answer cannot be found in the context, you must clearly state that you do not know or that the information is not available in the provided document.
+
+ Context:
+ {context}`;
   const qaPrompt = ChatPromptTemplate.fromMessages([
     ["system", systemPrompt],
     new MessagesPlaceholder("chat_history"),
     ["human", "{input}"],
   ]);
-
-  const questionAnswerChain = qaPrompt.pipe(llm);
-
-  // Define the State interface
-  const GraphAnnotation = Annotation.Root({
-    input: Annotation<string>(),
-    chat_history: Annotation<BaseMessage[]>({
-      reducer: messagesStateReducer,
-      default: () => [],
-    }),
-    context: Annotation<string>(),
-    answer: Annotation<string>(),
+  const questionAnswerChain = await createStuffDocumentsChain({
+    llm,
+    prompt: qaPrompt,
   });
 
-  async function retrieveDocument(state: typeof GraphAnnotation.State) {
-    const latestQuestion = state.input;
-    const chatHistory = state.chat_history;
-    ztoolkit.log(`[rag.ts:retrieveDocument] \nlatestQuestion : ${latestQuestion}, \nchatHistory:${chatHistory}`)
+  // 3. 위 두 체인을 결합하여 최종 RAG 체인 생성
+  const ragChain = await createRetrievalChain({
+    retriever: historyAwareRetriever,
+    combineDocsChain: questionAnswerChain,
+  });
 
-    const retrievedDocs = await historyAwareRetriever.invoke({
-      input: latestQuestion,
-      chat_history: chatHistory,
-    });
-    ztoolkit.log(`[rag.ts:retrieveDocument]: ${retrievedDocs}`);
+  // 4. 저장소에서 현재 대화의 기록을 가져와 체인 실행
+  const chatHistory = chatHistories[threadID] || [];
 
-    const formattedDocs = await formatDocs(retrievedDocs);
-    ztoolkit.log(`[rag.ts:retrieveDocument]: ${formattedDocs}`);
+  const response = await ragChain.invoke({
+    chat_history: chatHistory,
+    input: question,
+  });
 
-    return { context: formattedDocs };
-  }
+  ztoolkit.log(response);
 
-  async function callModel(state: typeof GraphAnnotation.State) {
-    const latestQuestion = state.input;
-    const context = state.context;
-    const chatHistory = state.chat_history;
-    ztoolkit.log(`[rag.ts:callModel] \nlatestQuestion : ${latestQuestion}, \ncontext: ${context}\nchatHistory:${chatHistory}`)
+  // 5. 새로운 질문과 답변을 대화 기록에 추가하여 업데이트
+  chatHistories[threadID] = chatHistory.concat([
+    new HumanMessage(question),
+    new AIMessage(response.answer),
+  ]);
 
-
-    const response = await questionAnswerChain.invoke({
-      chat_history: chatHistory,
-      input: latestQuestion,
-      context: context,
-    });
-    const responseContent = response.content.toString();
-    ztoolkit.log(`[rag.ts:callModel]`);
-    ztoolkit.log(responseContent)
-
-    return {
-      answer: responseContent,
-      chat_history: [
-        new HumanMessage(latestQuestion),
-        new AIMessage(responseContent),
-      ],
-    };
-  }
-
-  // Create the workflow
-  const graph = new StateGraph(GraphAnnotation)
-    .addNode("model", callModel)
-    .addNode("retrieve_and_format", retrieveDocument)
-    .addEdge(START, "retrieve_and_format")
-    .addEdge("retrieve_and_format", "model")
-    .addEdge("model", END);
-
-  // Compile the graph with a checkpointer object
-  const memory = new MemorySaver();
-  const app = graph.compile({ checkpointer: memory });
-
-  const config = { configurable: { thread_id: threadID } };
-
-  const response = await app.invoke({ input: question }, { ...config });
-
-  return response.answer.toString();
+  return response.answer;
 }
+
+
+// export async function getResponseByGraph(
+//   pdfURI: string,
+//   question: string,
+//   threadID: string,
+// ): Promise<string> {
+//   const llm = await getModelInstance();
+
+//   const embeddings = await getEmbeddingInstance();
+
+//   const allSplits = await split(pdfURI);
+//   const vectorStore = new MemoryVectorStore(embeddings, {});
+//   await vectorStore.addDocuments(allSplits);
+
+//   const retriever = vectorStore.asRetriever({
+//     k: 10,
+//   });
+
+//   const contextualizeQSystemPrompt =
+//     "Given a chat history and the latest user question " +
+//     "which might reference context in the chat history, " +
+//     "formulate a standalone question which can be understood " +
+//     "without the chat history. Do NOT answer the question, " +
+//     "just reformulate it if needed and otherwise return it as is.";
+
+//   const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
+//     ["system", contextualizeQSystemPrompt],
+//     new MessagesPlaceholder("chat_history"),
+//     ["human", "{input}"],
+//   ]);
+
+//   const historyAwareRetriever = await createHistoryAwareRetriever({
+//     llm: llm,
+//     retriever: retriever,
+//     rephrasePrompt: contextualizeQPrompt,
+//   });
+
+//   const systemPrompt =
+//     "You are an assistant for question-answering tasks. " +
+//     "Use the following pieces of retrieved context to answer " +
+//     "the question. If you don't know the answer, say that you " +
+//     "don't know. Use three sentences maximum and keep the " +
+//     "answer concise." +
+//     "\n\n" +
+//     "{context}";
+
+//   const qaPrompt = ChatPromptTemplate.fromMessages([
+//     ["system", systemPrompt],
+//     new MessagesPlaceholder("chat_history"),
+//     ["human", "{input}"],
+//   ]);
+
+//   const questionAnswerChain = qaPrompt.pipe(llm);
+
+//   // Define the State interface
+//   const GraphAnnotation = Annotation.Root({
+//     input: Annotation<string>(),
+//     chat_history: Annotation<BaseMessage[]>({
+//       reducer: messagesStateReducer,
+//       default: () => [],
+//     }),
+//     context: Annotation<string>(),
+//     answer: Annotation<string>(),
+//   });
+
+//   async function retrieveDocument(state: typeof GraphAnnotation.State) {
+//     const latestQuestion = state.input;
+//     const chatHistory = state.chat_history;
+//     ztoolkit.log(`[rag.ts:retrieveDocument] \nlatestQuestion : ${latestQuestion}, \nchatHistory:${chatHistory}`)
+
+//     // const retrievedDocs = await historyAwareRetriever.invoke({
+//     //   input: latestQuestion,
+//     //   chat_history: chatHistory,
+//     // });
+//     const retrievedDocs = await retriever.invoke(latestQuestion);
+//     ztoolkit.log(`[rag.ts:retrieveDocument]: ${retrievedDocs}`);
+
+//     const formattedDocs = await formatDocs(retrievedDocs);
+//     ztoolkit.log(`[rag.ts:retrieveDocument]: ${formattedDocs}`);
+
+//     return { context: formattedDocs };
+//   }
+
+//   async function callModel(state: typeof GraphAnnotation.State) {
+//     const latestQuestion = state.input;
+//     const context = state.context;
+//     const chatHistory = state.chat_history;
+//     ztoolkit.log(`[rag.ts:callModel] \nlatestQuestion : ${latestQuestion}, \ncontext: ${context}\nchatHistory:${chatHistory}`)
+
+
+//     const response = await questionAnswerChain.invoke({
+//       chat_history: chatHistory,
+//       input: latestQuestion,
+//       context: context,
+//     });
+//     const responseContent = response.content.toString();
+//     ztoolkit.log(`[rag.ts:callModel]`);
+//     ztoolkit.log(responseContent)
+
+//     return {
+//       answer: responseContent,
+//       chat_history: [
+//         new HumanMessage(latestQuestion),
+//         new AIMessage(responseContent),
+//       ],
+//     };
+//   }
+
+//   // Create the workflow
+//   const graph = new StateGraph(GraphAnnotation)
+//     .addNode("model", callModel)
+//     .addNode("retrieve_and_format", retrieveDocument)
+//     .addEdge(START, "retrieve_and_format")
+//     .addEdge("retrieve_and_format", "model")
+//     .addEdge("model", END);
+
+
+//   // Compile the graph with a checkpointer object
+//   const memory = new MemorySaver();
+//   const app = graph.compile({ checkpointer: memory });
+
+//   const config = { configurable: { thread_id: threadID } };
+
+//   const response = await app.invoke({ input: question }, { ...config });
+
+//   return response.answer;
+// }
