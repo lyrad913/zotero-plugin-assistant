@@ -41,8 +41,9 @@ function formatDocs(docs, joinSeparator = "\n") {
 }
 
 async function split(pdfURI: string) {
-  const res = await ztoolkit.getGlobal("fetch")(pdfURI);
-  const pdfBlob = await res.blob();
+  const res = await fetch(pdfURI);
+  const tempBlob = await res.blob();
+  const pdfBlob = tempBlob.slice();
 
   return new Promise((resolve, reject) => {
     const load_worker = new ChromeWorker(
@@ -61,7 +62,7 @@ async function split(pdfURI: string) {
         const { type, allSplits, error } = messageData;
 
         if (type === "SUCCESS" && allSplits) {
-          // @ts-ignore
+          // @ts-ignore xxx
           ztoolkit.log(`[rag.ts] Worker로부터 'allSplits' 수신: ${allSplits.length}개 분할`);
           resolve(allSplits as Document[]);
           load_worker.terminate(); // 성공 시 워커 종료
@@ -81,7 +82,7 @@ async function split(pdfURI: string) {
           // load_worker.terminate();
         }
       } else {
-        // type 필드가 없는 메시지 (예: "ready" 메시지). 일단 무시하고 다음 메시지를 기다립니다.
+        // type 필드가 없는 메시지 일단 무시하고 다음 메시지를 기다립니다.
         // @ts-ignore xxx
         ztoolkit.log("[rag.ts] Worker로부터 'type' 필드가 없는 메시지 수신 (무시):", messageData);
       }
@@ -92,6 +93,7 @@ async function split(pdfURI: string) {
 export async function getResponseByGraph(
   pdfURI: string,
   question: string,
+  threadID: string,
 ): Promise<string> {
   const llm = await getModelInstance();
 
@@ -155,36 +157,41 @@ export async function getResponseByGraph(
   async function retrieveDocument(state: typeof GraphAnnotation.State) {
     const latestQuestion = state.input;
     const chatHistory = state.chat_history;
+    ztoolkit.log(`[rag.ts:retrieveDocument] \nlatestQuestion : ${latestQuestion}, \nchatHistory:${chatHistory}`)
 
     const retrievedDocs = await historyAwareRetriever.invoke({
       input: latestQuestion,
       chat_history: chatHistory,
     });
+    ztoolkit.log(`[rag.ts:retrieveDocument]: ${retrievedDocs}`);
 
     const formattedDocs = await formatDocs(retrievedDocs);
+    ztoolkit.log(`[rag.ts:retrieveDocument]: ${formattedDocs}`);
 
     return { context: formattedDocs };
   }
 
   async function callModel(state: typeof GraphAnnotation.State) {
     const latestQuestion = state.input;
-    ztoolkit.log(`[rag.ts] latestQuestion: ${latestQuestion}`)
     const context = state.context;
-    ztoolkit.log(`[rag.ts] context: ${context}`)
     const chatHistory = state.chat_history;
-    ztoolkit.log(`[rag.ts] chatHistory: ${chatHistory}`)
+    ztoolkit.log(`[rag.ts:callModel] \nlatestQuestion : ${latestQuestion}, \ncontext: ${context}\nchatHistory:${chatHistory}`)
+
 
     const response = await questionAnswerChain.invoke({
       chat_history: chatHistory,
       input: latestQuestion,
       context: context,
     });
+    const responseContent = response.content.toString();
+    ztoolkit.log(`[rag.ts:callModel]`);
+    ztoolkit.log(responseContent)
 
     return {
-      answer: response.content,
+      answer: responseContent,
       chat_history: [
         new HumanMessage(latestQuestion),
-        new AIMessage(response.content.toString()),
+        new AIMessage(responseContent),
       ],
     };
   }
@@ -201,8 +208,7 @@ export async function getResponseByGraph(
   const memory = new MemorySaver();
   const app = graph.compile({ checkpointer: memory });
 
-  const threadId = uuidv4();
-  const config = { configurable: { thread_id: threadId } };
+  const config = { configurable: { thread_id: threadID } };
 
   const response = await app.invoke({ input: question }, { ...config });
 

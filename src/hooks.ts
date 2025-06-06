@@ -26,11 +26,6 @@ async function onStartup() {
   await Promise.all(
     Zotero.getMainWindows().map((win) => onMainWindowLoad(win)),
   );
-
-  // const worker = new ChromeWorker(
-  //   `chrome://${addon.data.config.addonRef}/content/scripts/rag-worker.js`,
-  // );
-  // ztoolkit.log(`[hook.ts] Worker Test: ${worker}`);
 }
 
 async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {

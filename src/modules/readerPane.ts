@@ -3,9 +3,8 @@ import { getLocaleID, getString } from "../utils/locale";
 import { getPref } from "../utils/prefs";
 import { getResponseByGraph } from "./components/rag";
 import { addMessage } from "./components/ChatMessage"; // ChatMessage.ts 파일에서 addMessage 함수 가져오기
-import { getResponse } from "./components/llm";
-import { AsyncGeneratorWithSetup } from "@langchain/core/utils/stream";
-
+// import { getResponse } from "./components/llm";
+// import { AsyncGeneratorWithSetup } from "@langchain/core/utils/stream";
 
 const chatSystemPrompt = "You're an Helpful Assistant";
 
@@ -37,15 +36,23 @@ export function registerAssistantPaneSection() {
     },
     onRender: async ({ body, item }) => {
       let pdfURI = "";
+      let threadID = "";
+      ztoolkit.log(`[readerPane.ts: onRender] item id : ${item.id}`);
       if (!item.isAttachment()) {
         const attachments = item.getAttachments();
-        for(const attachmentID of attachments){
+        for (const attachmentID of attachments) {
           const attachment = Zotero.Items.get(attachmentID);
-          if (attachment.attachmentContentType === "application/pdf" || attachment.attachmentContentType === "") {
+          if (
+            attachment.attachmentContentType === "application/pdf" ||
+            attachment.attachmentContentType === ""
+          ) {
             try {
               const pdfPath = await attachment.getFilePathAsync();
               ztoolkit.log(`File Path : ${pdfPath}`);
               pdfURI = Zotero.File.pathToFileURI(pdfPath);
+              threadID = `${item.id}.${attachmentID}`;
+              ztoolkit.log(`[readerPane.ts: onRender] attachment id : ${attachmentID}`);
+              ztoolkit.log(`[readerPane.ts: onRender] threadID : ${threadID}`);
               break;
             } catch (error) {
               ztoolkit.log(error);
@@ -108,7 +115,7 @@ export function registerAssistantPaneSection() {
 
               try {
                 // const response = await getResponse(chatSystemPrompt, question);
-                const response = await getResponseByGraph(pdfURI, question);
+                const response = await getResponseByGraph(pdfURI, question, threadID);
 
                 if (thinkingMessage && chatMessages.contains(thinkingMessage)) {
                   // Remove the thinking message

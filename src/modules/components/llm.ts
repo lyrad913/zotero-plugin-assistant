@@ -88,6 +88,7 @@ export async function getModelInstance(): Promise<BaseChatModel> {
         },
         temperature: temperature, // number 타입의 temperature 사용
         model: modelName,
+        streaming: false,
       });
       // 현재 인스턴스에 사용된 설정을 저장
       _currentApiKey = apiKey;
@@ -120,51 +121,51 @@ export async function getModelInstance(): Promise<BaseChatModel> {
   return model;
 }
 
-export async function getResponse(
-  system_prompt: string,
-  question: string,
-): Promise<string> {
-  const model = await getModelInstance();
+// export async function getResponse(
+//   system_prompt: string,
+//   question: string,
+// ): Promise<string> {
+//   const model = await getModelInstance();
 
-  if (!model) {
-    const errorMessage =
-      "LLM이 설정되지 않았거나 초기화에 실패했습니다. 환경설정을 확인하고 올바른지 확인해주세요.";
-    ztoolkit.log(`[llm.ts] ${errorMessage}`);
-    return `Error: ${errorMessage}`;
-  }
+//   if (!model) {
+//     const errorMessage =
+//       "LLM이 설정되지 않았거나 초기화에 실패했습니다. 환경설정을 확인하고 올바른지 확인해주세요.";
+//     ztoolkit.log(`[llm.ts] ${errorMessage}`);
+//     return `Error: ${errorMessage}`;
+//   }
 
-  const messages = [
-    new SystemMessage(system_prompt),
-    new HumanMessage(question),
-  ];
+//   const messages = [
+//     new SystemMessage(system_prompt),
+//     new HumanMessage(question),
+//   ];
 
-  try {
-    const response = await model.invoke(messages);
-    if (response && response.content) {
-      ztoolkit.log(`[llm.ts] Response content: ${response.content.toString()}`);
-      return response.content.toString();
-    } else {
-      ztoolkit.log(
-        `[llm.ts] Error: Response content is missing or invalid. Response: ${JSON.stringify(response)}`,
-      );
-      return "Error: Response content missing from LLM.";
-    }
-  } catch (error) {
-    ztoolkit.log(`[llm.ts] Error during model.invoke. Type: ${typeof error}`);
+//   try {
+//     const response = await model.invoke(messages);
+//     if (response && response.content) {
+//       ztoolkit.log(`[llm.ts] Response content: ${response.content.toString()}`);
+//       return response.content.toString();
+//     } else {
+//       ztoolkit.log(
+//         `[llm.ts] Error: Response content is missing or invalid. Response: ${JSON.stringify(response)}`,
+//       );
+//       return "Error: Response content missing from LLM.";
+//     }
+//   } catch (error) {
+//     ztoolkit.log(`[llm.ts] Error during model.invoke. Type: ${typeof error}`);
 
-    if (error === undefined) {
-      ztoolkit.log(
-        "[llm.ts] The caught error is literally 'undefined'. This is highly unusual.",
-      );
-    } else if (error instanceof Error) {
-      ztoolkit.log(
-        `[llm.ts] Error message: ${error.message}. Stack: ${error.stack}`,
-      );
-    } else {
-      ztoolkit.log(
-        `[llm.ts] Caught non-Error object: ${JSON.stringify(error)}`,
-      );
-    }
-    return `Error: LLM invocation failed in llm.ts. Details: ${JSON.stringify(error)}`;
-  }
-}
+//     if (error === undefined) {
+//       ztoolkit.log(
+//         "[llm.ts] The caught error is literally 'undefined'. This is highly unusual.",
+//       );
+//     } else if (error instanceof Error) {
+//       ztoolkit.log(
+//         `[llm.ts] Error message: ${error.message}. Stack: ${error.stack}`,
+//       );
+//     } else {
+//       ztoolkit.log(
+//         `[llm.ts] Caught non-Error object: ${JSON.stringify(error)}`,
+//       );
+//     }
+//     return `Error: LLM invocation failed in llm.ts. Details: ${JSON.stringify(error)}`;
+//   }
+// }

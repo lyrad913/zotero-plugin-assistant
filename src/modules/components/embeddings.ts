@@ -10,7 +10,7 @@ let _currentModelName: string | null = null;
 
 export function resetEmbeddingInstance(): void {
   ztoolkit.log(
-    "[llm.ts] 환경설정 변경 또는 명시적 호출로 인해 LLM 인스턴스를 리셋합니다.",
+    "[embeddings.ts] 환경설정 변경 또는 명시적 호출로 인해 embeddings 인스턴스를 리셋합니다.",
   );
   embeddings = null;
   _currentApiKey = null;

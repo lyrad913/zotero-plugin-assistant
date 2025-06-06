@@ -1,6 +1,7 @@
 // Solving an Error "ReadableStream is not defined."
 import "web-streams-polyfill/polyfill";
 _globalThis.ReadableStream = ReadableStream;
+// _globalThis.ReadableStream = Zotero.getGlobal('ReadableStream');
 
 _globalThis.window = _globalThis;
 

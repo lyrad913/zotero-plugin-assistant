@@ -1,21 +1,21 @@
-// import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { Document } from "@langchain/core/documents";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import * as pdfjsLib from 'resource://zotero/reader/pdf/build/pdf.mjs';
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'resource://zotero/reader/pdf/build/pdf.worker.mjs';
+import * as pdfjsLib from "resource://zotero/reader/pdf/build/pdf.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "resource://zotero/reader/pdf/build/pdf.worker.mjs";
 export { pdfjsLib };
 
-console.log('[rag-worker.ts] 워커 스크립트 파일 로드됨.'); // 워커 파일 자체가 로드되는지 확인
+// console.log("[rag-worker.ts] 워커 스크립트 파일 로드됨.");
 
-self.onmessage = async(event) => {
+self.onmessage = async (event) => {
   try {
-    console.log(`[rag-worker.ts] 메세지 수신`)
-    console.log(event.data);
-    const pdfBlob = event.data.pdfBlob; // 메인 스레드에서 받은 pdf blob
+    // console.log(`[rag-worker.ts] 메세지 수신`);
+    // console.log(event.data);
+    const pdfBlob = event.data.pdfBlob;
 
-    console.log(`[rag-worker.ts] Docs`);
+    // console.log(`[rag-worker.ts] Docs`);
     const docs = await load(pdfBlob);
-    console.log(docs);
+    // console.log(docs);
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 200,
@@ -23,20 +23,24 @@ self.onmessage = async(event) => {
 
     const allSplits = await textSplitter.splitDocuments(docs);
 
-    console.log(`[rag-worker.ts] All Spilts`);
-    console.log(allSplits);
+    // console.log(`[rag-worker.ts] All Spilts`);
+    // console.log(allSplits);
 
-    self.postMessage({ type: "SUCCESS", allSplits: allSplits })
-  } catch(error){
-    self.postMessage({type: "SHIT", error:error});
+    self.postMessage({ type: "SUCCESS", allSplits: allSplits });
+  } catch (error) {
+    self.postMessage({ type: "SHIT", error: error });
   }
-}
+};
 
-/**
+/** Orignally from langchainjs WebPDFLoader method : laod()
  * Loads the contents of the PDF as documents.
  * @returns An array of Documents representing the retrieved data.
  */
-async function load(blob:Blob, splitPages:boolean = true, parsedItemSeparator: string = ""): Promise<Document[]> {
+async function load(
+  blob: Blob,
+  splitPages: boolean = true,
+  parsedItemSeparator: string = "",
+): Promise<Document[]> {
   const parsedPdf = await pdfjsLib.getDocument({
     data: new Uint8Array(await blob.arrayBuffer()),
     useWorkerFetch: false,
@@ -86,7 +90,7 @@ async function load(blob:Blob, splitPages:boolean = true, parsedItemSeparator: s
             pageNumber: i,
           },
         },
-      })
+      }),
     );
   }
 
@@ -103,7 +107,7 @@ async function load(blob:Blob, splitPages:boolean = true, parsedItemSeparator: s
       pageContent: documents.map((doc) => doc.pageContent).join("\n\n"),
       metadata: {
         pdf: {
-          version:pdfjsLib.version,
+          version: pdfjsLib.version,
           info: meta?.info,
           metadata: meta?.metadata,
           totalPages: parsedPdf.numPages,
